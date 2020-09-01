@@ -7,7 +7,7 @@ var svgHeight = 660;
 var margin = {
     top: 20,
     right: 40,
-    bottom: 360,
+    bottom: 90,
     left: 100
 };
 // Define dimensions of the chart area
@@ -42,16 +42,46 @@ d3.csv("data.csv").then(function(healthData) {
         console.log("Smokes:", data.smokes);
         console.log("Age:", data.age);
     });
+
+    //Create Scales
+    var xLinearScale = d3.scaleLinear()
+        .domain(d3.max(healthData, d => d.age))
+        .range([0, width]);
+    //.range([margin.left,width - margin.right]);
+
+    var yLinearScale = d3.scaleLinear()
+        .domain([0, d3.max(healthData, d => d.smokes)])
+        .range([height, 0]);
+    //.range([height-margin.bottom,margin.top]);
+
+    // Create axis functions
+    var bottomAxis = d3.axisBottom(xLinearScale);
+    var leftAxis = d3.axisLeft(yLinearScale);
+
+    // Append Axes to the chart
+    chartGroup.append("g")
+        .attr("transform", `translate(0, ${height})`)
+        .call(bottomAxis);
+
+    chartGroup.append("g")
+        .call(leftAxis);
+
+    // Create Circles
+    var circlesGroup = chartGroup.selectAll("circle")
+        .data(healthData)
+        .enter()
+        .append("circle")
+        .attr("cx", d => xLinearScale(d.age))
+        .attr("cy", d => yLinearScale(d.smokes))
+        .attr("r", "15")
+        .attr("fill", "pink")
+        .attr("opacity", ".5");
+
+    // Initialize tool tip
+    var toolTip = d3.tip()
+        .attr("class", "tooltip")
+        .offset([80, -60])
+        .html(function(d) {
+            return (`${d.rockband}<br>Hair length: ${d.hair_length}<br>Hits: ${d.num_hits}`);
+        });
 });
-
-//Create Scales
-//= ============================================
-var xTimeScale = d3.scaleLinear()
-    .domain(d3.extent(healthData, d => d.age))
-    .range([0, width]);
-//.range([chartMargin.left,width - chartMargin.right]);
-
-var yLinearScale1 = d3.scaleLinear()
-    .domain([0, d3.max(donutData, d => d.smokes)])
-    .range([height, 0]);
-//.range([height-chartMargin.bottom,chartMargin.top]);
