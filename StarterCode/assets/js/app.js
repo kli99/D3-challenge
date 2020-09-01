@@ -1,23 +1,22 @@
-// @TODO: YOUR CODE HERE! You need to create a scatter plot between two of the data variables such as 
+// @TODO: YOUR CODE HERE! To create a scatter plot between two of the data variables
 // Smokers vs. Age   // Define SVG area dimensions
 var svgWidth = 960;
 var svgHeight = 660;
 
 // Define the chart's margins as an object
-var chartMargin = {
-    top: 30,
-    right: 30,
-    bottom: 30,
-    left: 30
+var margin = {
+    top: 20,
+    right: 40,
+    bottom: 360,
+    left: 100
 };
-
 // Define dimensions of the chart area
-var chartWidth = svgWidth - chartMargin.left - chartMargin.right;
-var chartHeight = svgHeight - chartMargin.top - chartMargin.bottom;
+var width = svgWidth - margin.left - margin.right;
+var height = svgHeight - margin.top - margin.bottom;
 
 // Select body, append SVG area to it, and set the dimensions
 var svg = d3
-    .select("body")
+    .select("scatter")
     .append("svg")
     .attr("height", svgHeight)
     .attr("width", svgWidth);
@@ -25,12 +24,10 @@ var svg = d3
 // Append a group to the SVG area and shift ('translate') it to the right and down to adhere
 // to the margins set in the "chartMargin" object.
 var chartGroup = svg.append("g")
-    .attr("transform", `translate(${chartMargin.left}, ${chartMargin.top})`);
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
 //Load data from data.csv
-
 d3.csv("data.csv").then(function(healthData) {
-
     console.log(healthData);
 
     //log a list of state abbr names
@@ -41,16 +38,20 @@ d3.csv("data.csv").then(function(healthData) {
     healthData.forEach(function(data) {
         data.age = +data.age;
         data.smokes = +data.smokes;
-        data.smokesLow = +data.smokesLow;
-        data.smokesHigh = +data.smokesHigh;
-
-
 
         console.log("Smokes:", data.smokes);
-        console.log("LowSmokes:", data.smokesLow);
-        console.log("HighSmokes:", data.smokesHigh);
         console.log("Age:", data.age);
     });
-}).catch(function(error) {
-    console.log(error);
 });
+
+//Create Scales
+//= ============================================
+var xTimeScale = d3.scaleLinear()
+    .domain(d3.extent(healthData, d => d.age))
+    .range([0, width]);
+//.range([chartMargin.left,width - chartMargin.right]);
+
+var yLinearScale1 = d3.scaleLinear()
+    .domain([0, d3.max(donutData, d => d.smokes)])
+    .range([height, 0]);
+//.range([height-chartMargin.bottom,chartMargin.top]);
