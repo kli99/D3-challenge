@@ -92,7 +92,8 @@ d3.csv("data.csv").then(function(healthData) {
         .text(d => d.abbr)
         .attr("dx", d => xLinearScale(d.age))
         .attr("dy", d => yLinearScale(d.smokes))
-        .classed("stateText", true);
+        .classed("stateText", true)
+        .attr("transform", "translate(-0.5, 5.5)");;
 
     // Initialize tool tip
     var toolTip = d3.tip()
@@ -127,7 +128,7 @@ d3.csv("data.csv").then(function(healthData) {
     chartGroup.append("text")
         .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
         .attr("class", "aText")
-        .text("Age(median)");
+        .text("Age(Median)");
 
 
 }).catch(function(error) {
