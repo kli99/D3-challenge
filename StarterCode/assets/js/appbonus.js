@@ -26,7 +26,6 @@ var svg = d3
 var chartGroup = svg.append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-
 //Load data from data.csv
 d3.csv("data.csv").then(function(healthData) {
     console.log(healthData);
@@ -39,23 +38,103 @@ d3.csv("data.csv").then(function(healthData) {
     healthData.forEach(function(data) {
         data.age = +data.age;
         data.smokes = +data.smokes;
+        data.health = +data.health;
+        data.poverty = +data.poverty;
 
         console.log("Smokes:", data.smokes);
         console.log("Age:", data.age);
+        console.log("Health:", data.health);
+        console.log("Poverty:", data.poverty)
+
     });
 
-    //Create Scales
-    var xLinearScale = d3.scaleLinear()
-        .domain([d3.min(healthData, d => d.age) * 0.8,
-            d3.max(healthData, d => d.age) * 1.2
-        ])
-        .range([0, width]);
-    //.range([margin.left,width - margin.right]);
+    // Initial Params
+    var chosenXAxis = "age";
 
-    var yLinearScale = d3.scaleLinear()
-        .domain([d3.min(healthData, d => d.smokes) * 0.8, d3.max(healthData, d => d.smokes)])
-        .range([height, 0]);
-    //.range([height-margin.bottom,margin.top]);
+    // function used for updating x-scale var upon click on axis label
+    function xScale(healthData, chosenXAxis) {
+
+        //Create Scales
+        var xLinearScale = d3.scaleLinear()
+            .domain([d3.min(healthData, d => d.age) * 0.8,
+                d3.max(healthData, d => d.age) * 1.2
+            ])
+            .range([0, width]);
+        //.range([margin.left,width - margin.right]);
+        return xLinearScale;
+    }
+
+    // function used for updating xAxis var upon click on axis label
+
+    function renderAxes(newXScale, xAxis) {
+        var bottomAxis = d3.axisBottom(newXScale);
+
+        xAxis.transition()
+            .duration(1000)
+            .call(bottomAxis);
+
+        return xAxis;
+    }
+
+    function yScale(healthData, chosenYAxis) {
+        var yLinearScale = d3.scaleLinear()
+            .domain([d3.min(healthData, d => d.smokes) * 0.8, d3.max(healthData, d => d.smokes)])
+            .range([height, 0]);
+
+        return yLinearScale;
+    };
+
+    // function used for updating circles group with a transition to
+    // new circles
+    function renderCircles(circlesGroup, newXScale, chosenXAxis) {
+
+        circlesGroup.transition()
+            .duration(1000)
+            .attr("cx", d => newXScale(d[chosenXAxis]));
+
+        return circlesGroup;
+    }
+
+
+
+    // function used for updating circles group with new tooltip
+    function updateToolTip(chosenXAxis, circlesGroup) {
+
+        var label;
+
+        if (chosenXAxis === "age") {
+            label = "Age (Median):";
+        } else {
+            label = "In Poverty(%):";
+        }
+
+        var toolTip = d3.tip()
+            .attr("class", "d3-tip")
+            .offset([80, -60])
+            .html(function(d) {
+                return (`${d.abbr}<br>Age: ${d.age}<br>Smokers: ${d.smokes}`);
+            });
+
+        //Create tooptip in the chart
+        chartGroup.call(toolTip);
+
+        //  Create event listeners to display and hide the tooltip
+        circlesGroup.on("mouseover", function(data) {
+                toolTip.show(data, this);
+            })
+            // onmouseout event
+            .on("mouseout", function(data, index) {
+                toolTip.hide(data);
+            });
+
+    }
+
+
+
+
+
+
+
 
     // Create axis functions
     var bottomAxis = d3.axisBottom(xLinearScale);
@@ -77,43 +156,9 @@ d3.csv("data.csv").then(function(healthData) {
         .attr("cx", d => xLinearScale(d.age))
         .attr("cy", d => yLinearScale(d.smokes))
         .attr("r", "15")
-        .classed("stateCircle", true)
-        // circlesGroup.append("text")
-        //     .text(d => d.abbr)
-        //     .classed("stateText", true);
+        .attr("fill", "blue")
 
 
-
-    // adding the State abbreviation to the circles
-    var stateText = chartGroup.selectAll(".text")
-        .data(healthData)
-        .enter()
-        .append("text")
-        .text(d => d.abbr)
-        .attr("dx", d => xLinearScale(d.age))
-        .attr("dy", d => yLinearScale(d.smokes))
-        .classed("stateText", true);
-
-    // Initialize tool tip
-    var toolTip = d3.tip()
-        .attr("class", "d3-tip")
-        .offset([80, -60])
-        .html(function(d) {
-            return (`${d.abbr}<br>Age: ${d.age}<br>Smokers: ${d.smokes}`);
-        });
-
-    //Create tooptip in the chart
-    chartGroup.call(toolTip);
-
-    //  Create event listeners to display and hide the tooltip
-    circlesGroup.on("mouseover", function(data) {
-            toolTip.show(data, this);
-        })
-        // onmouseout event
-        .on("mouseout", function(data, index) {
-            toolTip.hide(data);
-        });
-    //return circlesGroup;
 
     // Create axes labels
     chartGroup.append("text")
@@ -128,6 +173,7 @@ d3.csv("data.csv").then(function(healthData) {
         .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
         .attr("class", "aText")
         .text("Age(median)");
+
 
 
 }).catch(function(error) {
